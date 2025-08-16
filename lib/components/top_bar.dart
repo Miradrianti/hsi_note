@@ -31,6 +31,16 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget{
     );
   }
 
+  factory MyAppBar.home(String title, {
+    TextStyle? titleStyle,
+  }) {
+    return MyAppBar(
+      title: title,
+      showBackButton: true,
+      titleStyle: titleStyle,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
