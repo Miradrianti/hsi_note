@@ -1,3 +1,4 @@
+import 'package:aplikasi_catatan/components/regular_textfield.dart';
 import 'package:aplikasi_catatan/components/top_bar.dart';
 import 'package:aplikasi_catatan/components/regular_button.dart';
 import 'package:aplikasi_catatan/components/regular_card.dart';
@@ -6,8 +7,17 @@ import 'package:aplikasi_catatan/view/home.dart';
 import 'package:aplikasi_catatan/view/login.dart';
 import 'package:flutter/material.dart';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _username = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -27,21 +37,24 @@ class RegisterPage extends StatelessWidget {
 
                 RegularText('Full Name'),
                 SizedBox(height: 8,),
-                // RegularTextfield(
-                //   maxLength: 50,
-                //   hintText: 'Example: John Doe',),
+                RegularTextfield.text(
+                  controller: _username,
+                  hintText: 'Example: John Doe',),
                 SizedBox(height: 16,),
 
                 RegularText('Email Adsress'),
                 SizedBox(height: 8,),
-                // RegularTextfield(
-                //   maxLength: 50,
-                //   hintText: 'Example: johndoe@gmail.com',),
+                RegularTextfield.text(
+                  controller: _emailController,
+                  hintText: 'Example: johndoe@gmail.com',),
                 SizedBox(height: 16,),
 
                 RegularText('Password'),
                 SizedBox(height: 8,),
-                // RegularTextfield.pass(hintText: "********"),
+                RegularTextfield.pass(
+                  controller: _passwordController,
+                  hintText: "********"
+                ),
                 
                 SizedBox(height: 40,),
                 RegularButton.filled(

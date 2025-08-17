@@ -1,40 +1,28 @@
-import 'package:aplikasi_catatan/logic/login_handler.dart';
-import 'package:aplikasi_catatan/view/home.dart';
+import 'package:aplikasi_catatan/bloc/login_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../bloc/login_bloc.dart';
+import '../view/home.dart';
 import '../view/login.dart';
 
 class MyApp extends StatelessWidget {
-  final LoginHandler _loginHandler = LoginHandler();
-
-  MyApp({super.key});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'HSI Notes',
-      debugShowCheckedModeBanner: false,
-      home: FutureBuilder<bool>(
-        future: _checkLoginStatus(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
-          } else if (snapshot.hasData && snapshot.data == true) {
-            return HomePage();
-          } else {
-            return LoginPage();
-          }
-        }
-      ),
-      routes: {
-        '/home' : (context) => HomePage(),
-        '/login' : (context) => LoginPage(),
-      },
+        title: 'HSI Notes',
+        debugShowCheckedModeBanner: false,
+        home: BlocBuilder<LoginBloc, LoginState>(
+          builder: (context, state) {
+            if (state.status == LoginStatus.success) {
+              return const HomePage();
+            } else {
+              return const LoginPage();
+            }
+          },
+        ),
     );
-  }
-
-  Future<bool> _checkLoginStatus() async {
-    final user = await _loginHandler.getCurrentUser();
-    return user != null;
   }
 }

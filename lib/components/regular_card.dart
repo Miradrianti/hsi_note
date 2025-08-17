@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
 class RegularCard extends StatelessWidget {
-  const RegularCard({super.key, this.children = const []});
+  
+  const RegularCard({
+    super.key, 
+    this.children = const []
+  });
 
   final List<Widget> children;
 

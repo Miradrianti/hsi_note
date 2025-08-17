@@ -1,4 +1,7 @@
+import 'package:aplikasi_catatan/bloc/login_bloc.dart';
+import 'package:aplikasi_catatan/bloc/login_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MyAppBar extends StatelessWidget implements PreferredSizeWidget{
   
@@ -31,13 +34,23 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget{
     );
   }
 
-  factory MyAppBar.home(String title, {
-    TextStyle? titleStyle,
+  factory MyAppBar.home({
+    VoidCallback? onLogoutPressed,
   }) {
     return MyAppBar(
-      title: title,
-      showBackButton: true,
-      titleStyle: titleStyle,
+      customTitle: BlocBuilder<LoginBloc, LoginState>(
+        builder: (context, state) {
+          final email = state.user?.email ?? "User";
+          return Text('Welcome, $email!');
+        }
+      ),
+      showBackButton: false,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.logout),
+          onPressed: onLogoutPressed,
+        ),
+      ],
     );
   }
 

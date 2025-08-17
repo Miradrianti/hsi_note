@@ -1,65 +1,47 @@
+import 'package:aplikasi_catatan/components/bottom_bar.dart';
+import 'package:aplikasi_catatan/components/tag_input_field.dart';
 import 'package:aplikasi_catatan/components/top_bar.dart';
-import 'package:aplikasi_catatan/database/notes.dart';
 import 'package:aplikasi_catatan/model/note.dart';
 import 'package:flutter/material.dart';
 
 class WriteNote extends StatefulWidget {
   final int? noteId;
-  const WriteNote({super.key, this.noteId});
+  final Note? note;
+
+  const WriteNote({
+    super.key, 
+    this.note, 
+    this.noteId,
+  });
 
   @override
   State<WriteNote> createState() => _WriteNoteState();
 }
 
 class _WriteNoteState extends State<WriteNote> {
+  
+  late TextEditingController titleController;
+  late TextEditingController contentController;
+  late TextEditingController usernameController;
 
-  final _titleController = TextEditingController();
-  final _contentController = TextEditingController();
-  String _lastEdited = "";
+  bool _isBottomSheetOpen = false;
 
-  @override
+   @override
   void initState() {
     super.initState();
-    if (widget.noteId != null) {
-      _loadNote();
-    }
+    titleController = TextEditingController(text: widget.note?.title ?? "");
+    contentController = TextEditingController(text: widget.note?.content ?? "");
+    usernameController = TextEditingController(text: widget.note?.username ?? "");
   }
 
-  Future<void> _loadNote() async {
-    final note = await NoteDatabase.instance.getNoteById(widget.noteId!);
-    if (note != null) {
-      setState(() {
-        _titleController.text = note.title;
-        _contentController.text = note.content;
-        _lastEdited = note.date;
-      });
-    }
+  @override
+  void dispose() {
+    titleController.dispose();
+    contentController.dispose();
+    usernameController.dispose();
+    super.dispose();
   }
-
-  Future<void> _saveNote() async {
-    final now = DateTime.now().toString();
-    if (widget.noteId == null) {
-      // insert baru
-      await NoteDatabase.instance.insert(Note(
-        username: "admin", 
-        title: _titleController.text,
-        content: _contentController.text,
-        date: now,
-      ));
-    } else {
-      // update
-      await NoteDatabase.instance.update(Note(
-        id: widget.noteId,
-        username: "user123",
-        title: _titleController.text,
-        content: _contentController.text,
-        date: now,
-      ));
-    }
-    // ignore: use_build_context_synchronously
-    Navigator.pop(context, true); // kembali dan refresh list
-  }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,7 +54,7 @@ class _WriteNoteState extends State<WriteNote> {
         child: Column(
           children: [
             TextField(
-              controller: _titleController,
+              controller: titleController,
               decoration: const InputDecoration(
                 hintText: "Judul",
                 border: InputBorder.none,
@@ -81,7 +63,7 @@ class _WriteNoteState extends State<WriteNote> {
             ),
             Expanded(
               child: TextField(
-                controller: _contentController,
+                controller: contentController,
                 maxLines: null,
                 expands: true,
                 keyboardType: TextInputType.multiline,
@@ -92,32 +74,25 @@ class _WriteNoteState extends State<WriteNote> {
                 style: const TextStyle(fontSize: 16),
               ),
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        color: Colors.white,
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-            Expanded(
-              flex: 8,
-              child: Text('Last Edited: $_lastEdited}', textAlign: TextAlign.left,)),
-            Expanded(
-              flex: 2,
-              child: FloatingActionButton(
-                shape: BeveledRectangleBorder(),
-                backgroundColor: Color.fromRGBO(57, 70, 117, 1),
-                foregroundColor: Colors.white,
-                tooltip: 'Edit',
-                onPressed: _saveNote,
-                child: const Icon(Icons.more_horiz,),
-              ),
+            if (_isBottomSheetOpen) Divider(),
+            TagInputField(
+              initialTags: widget.note?.tags ?? [],
+              enabled: widget.noteId == null,
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: MyBottomBar(
+        noteId: widget.noteId,
+        note: widget.note,
+        titleController: titleController,
+        contentController: contentController,
+        usernameController: usernameController,
+        onOpenBottomSheet: (){
+          setState(() {
+            _isBottomSheetOpen = true;
+          });
+        },
       ),
     );
   }

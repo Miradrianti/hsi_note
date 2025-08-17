@@ -44,7 +44,8 @@ class NoteDatabase {
         username TEXT NOT NULL,
         title TEXT NOT NULL,
         content TEXT NOT NULL,
-        date TEXT NOT NULL
+        createdTime TEXT NOT NULL,
+        tags TEXT
       )
     ''');
   }
@@ -56,7 +57,7 @@ class NoteDatabase {
 
   Future<List<Note>> readAllNotes() async {
     final db = await instance.database;
-    final result = await db.query('notes', orderBy: 'date DESC');
+    final result = await db.query('notes', orderBy: 'createdTime DESC');
     return result.map((json) => Note.fromMap(json)).toList();
   }
 
@@ -86,5 +87,14 @@ class NoteDatabase {
       return Note.fromMap(maps.first);
     }
     return null;
+  }
+
+  Future<int> deleteNotebyId(int id) async {
+    final db = await instance.database;
+    return await db.delete(
+      'notes',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }

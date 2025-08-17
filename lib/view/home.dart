@@ -1,8 +1,13 @@
+import 'package:aplikasi_catatan/bloc/login_bloc.dart';
+import 'package:aplikasi_catatan/bloc/login_event.dart';
+import 'package:aplikasi_catatan/components/note_card.dart';
 import 'package:aplikasi_catatan/components/regular_text.dart';
+import 'package:aplikasi_catatan/components/top_bar.dart';
 import 'package:aplikasi_catatan/database/notes.dart';
 import 'package:aplikasi_catatan/model/note.dart';
 import 'package:aplikasi_catatan/view/write_note.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,6 +28,7 @@ class _HomePageState extends State<HomePage> {
 
   Future _loadNotes() async {
     final loadedNotes = await NoteDatabase.instance.readAllNotes();
+    if (!mounted) return;
     setState(() {
       notes = loadedNotes;
       isLoading = false;
@@ -30,13 +36,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future addNote() async {
-    final now = DateTime.now().toIso8601String();
     await NoteDatabase.instance.create(
       Note(
         username: "test",
         title: "Judul Catatan",
         content: "Isi catatan di sini...",
-        date: now,
+        createdTime: DateTime.now(),
       ),
     );
     _loadNotes();
@@ -44,29 +49,35 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: MyAppBar.home(
+        onLogoutPressed: () {
+          context.read<LoginBloc>().add(LogoutRequested());
+        },
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : notes.isEmpty
             ? _buildEmptyState()
             : _buildNotesList(),
-      floatingActionButton:SafeArea(
-        child: FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
           onPressed: (){
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const WriteNote()),
-            );
-            _loadNotes();
+            ).then((value) {
+            if (value == true) _loadNotes();
+            });
           },
           backgroundColor: Color.fromRGBO(57, 70, 117, 1),
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadiusGeometry.circular(80),
+            borderRadius: BorderRadius.circular(80),
           ),
           child: const Icon(Icons.add, size: 30,),
         ),
-      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
@@ -98,21 +109,53 @@ class _HomePageState extends State<HomePage> {
   }
 
 Widget _buildNotesList() {
-    return ListView.separated(
+    return GridView.builder(
+      padding: const EdgeInsets.all(8),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 1,
+      ),
       itemCount: notes.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final note = notes[index];
-        return ListTile(
-          title: Text(note.title),
-          subtitle: Text(
-            "${note.content}\nOleh: ${note.username} | ${note.date}",
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          onTap: () {
-            // nanti bisa ke halaman detail note
+        return Dismissible(
+        key: Key(note.id.toString()),
+        background: Container(
+          color: Colors.grey,
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 16),
+          child: const Icon(Icons.delete, color: Colors.white),
+        ),
+        direction: DismissDirection.endToStart,
+        onDismissed: (_) async {
+          await NoteDatabase.instance.deleteNotebyId(note.id!);
+          if (!mounted) return;
+          setState(() => notes.removeAt(index));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Catatan dihapus"))
+          );
+        },
+        child: NotesCard(
+          note: note,
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => WriteNote(note: note),
+              ),
+            );
+            if (result == true) _loadNotes();
           },
+          onDelete: () async {
+            await NoteDatabase.instance.deleteNotebyId(note.id!);
+            if (!mounted) return;
+            setState(() {
+              notes.removeAt(index);  
+            });
+          }
+        )
         );
       },
     );
